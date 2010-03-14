@@ -26,6 +26,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import de.sten.dg.shared.SMSMessageObject;
 import de.sten.dg.shared.SMSRequestObject;
 import de.sten.dg.shared.SMSResponseObject;
+import de.sten.dg.shared.SMSSendException;
 
 public class Z2 implements EntryPoint {
 
@@ -167,11 +168,20 @@ public class Z2 implements EntryPoint {
 				new AsyncCallback<SMSResponseObject>() {
 					public void onFailure(Throwable caught) {
 						System.out.println("rpc failure");
+						SMSSendException myex = (SMSSendException) caught;
+						dialoghtml
+						.setHTML("<p>"+myex.getErrorMsg()+"</p><br /> ");
+				dbox.center();
+				
+				System.out.println("caught says "+myex.getErrorMsg());
 					}
 
 					public void onSuccess(SMSResponseObject result) {
 						System.out.println("rpc success");
-						System.out.println("answer was: "+result);
+						System.out.println("answer was: "+result.getStatusmessage());
+						dialoghtml
+						.setHTML("<p>"+result.getStatusmessage()+"</p><br /> ");
+				dbox.center();
 
 					}
 				});

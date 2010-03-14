@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,21 +54,21 @@ SMSService{
 			} catch (IOException e) {
 				SMSSendException ex = new SMSSendException();
 				ex.setResponseCode(-1);
-				ex.setErrorMsg("Verbindungsproblem beim Abholen des Sicherheitstokens");
+				ex.setErrorMsg("<p><b>Verbindungsproblem beim Abholen des Sicherheitstokens</b><p>");
 				System.out.println(ex.getErrorMsg());
 				throw ex;
 			} catch (STSException e) {
 
 				SMSSendException ex = new SMSSendException();
 				ex.setResponseCode(-1);
-				ex.setErrorMsg("Fehler Abholen des Sicherheitstokensens. Deine Zugangsdaten scheinen nicht korrekt zu sein");
+				ex.setErrorMsg("<p><b>Fehler Abholen des Sicherheitstokensens :-(</b> <br /><br />Deine Zugangsdaten scheinen nicht korrekt zu sein<p>");
 				System.out.println(ex.getErrorMsg());
 				throw ex;
 			}
 			if (token ==null) {
 				SMSSendException ex = new SMSSendException();
 				ex.setResponseCode(-1);
-				ex.setErrorMsg("Fehler Abholen des Sicherheitstokensens. Deine Zugangsdaten scheinen nicht korrekt zu sein");
+				ex.setErrorMsg("<p><b>Fehler Abholen des Sicherheitstokensens :-(</b> <br /><br />Deine Zugangsdaten scheinen nicht korrekt zu sein<p>");
 				System.out.println(ex.getErrorMsg());
 				throw ex;
 			}
@@ -75,14 +76,14 @@ SMSService{
 			String authheader = "TAuth realm=\"https://odg.t-online.de\",tauth_token=\""
 				+ token + "\"";
 			
-			ArrayList<SMSResponseObject> responsesGood = new ArrayList<SMSResponseObject>();
-			ArrayList<SMSResponseObject> responsesBad = new ArrayList<SMSResponseObject>();
-
+		SMSSendReport report = new SMSSendReport();
 			for (int i=0; i<messages.size();i++){
 				try {
 					SMSResponseObject resp = sendSingleMessage(authheader, messages.get(i).getNumber(), 
 							messages.get(i).getMessage(), originator, environment, flash);
-					responsesGood.add(resp);
+					report.addSentMsg(messages.get(i).getNumber());
+					System.out.println("keine exception beim send try/catch");
+					
 						
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -90,7 +91,10 @@ SMSService{
 					SMSResponseObject resp = new SMSResponseObject();
 					resp.setStatuscode(-1);
 					resp.setStatusmessage("IOException beim Senden an "+messages.get(i).getNumber());
-					responsesBad.add(resp);
+					report.addBadMsg(messages.get(i).getNumber());
+					System.out.println("IO exception beim send try/catch");
+
+
 					
 				}
 				catch (SMSSendException e) {
@@ -99,13 +103,27 @@ SMSService{
 					resp.setStatusmessage("IOException beim Senden an "+messages.get(i).getNumber()+
 							"\n Antwort des ODG Servers war: "+e.getMessage()+
 							"\n HTTP Statuscode war: "+e.getResponseCode());
-					responsesBad.add(resp);
+					report.addBadMsg(messages.get(i).getNumber());
+					System.out.println("IO exception beim send try/catch");
+
+					
 
 				}
 			}
-		
-		
-		return null;
+		StringBuilder sb = new StringBuilder("");
+		sb.append("<b>Das Ergebnis des Sendevorgangs war: "
+				+report.getOverallStatusCode()
+				+"</b>&nbsp;&nbsp;&nbsp;<br /><br />Es wurden "+report.getTotalMsgSent()+" Nachrichten an "+report.getGoodRecipients()
+				+" Empfänger versandt");
+		if (report.getBadRecipients()>0){
+			sb.append("<br /><br />Leider wurden "+report.getTotalMsgBad()+" Nachrichten an "+report.getBadRecipients()
+					+" nicht versandt");
+			
+		}
+		SMSResponseObject smsresponse =new SMSResponseObject();
+		smsresponse.setStatuscode(0);
+		smsresponse.setStatusmessage(sb.toString());
+		return smsresponse;
 	}
 	
 	private SMSResponseObject sendSingleMessage(String authheader, String number, String message,String originator, 
@@ -136,7 +154,7 @@ SMSService{
 		}
 		else {			
 
-			System.out.println("message to "+number+ "not sent! response code was "+response2.getResponseCode()+
+			System.out.println("message to "+number+ " not sent! response code was "+response2.getResponseCode()+
 					"serverantwort war "+responsestr2);
 			SMSSendException e = new SMSSendException();
 			e.setResponseCode(-1);
