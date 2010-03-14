@@ -6,7 +6,7 @@ import java.util.Iterator;
 
 public class FormChecker {
 	public boolean isFormDataOK(SMSFormObject formdata) throws SMSFormDataException{
-		System.out.println("checking form data");
+		//System.out.println("checking form data");
 		String errorMSg="";
 
 		String uname = formdata.getUsername();
@@ -16,9 +16,9 @@ public class FormChecker {
 
 		ArrayList<String> nums = formdata.getNumbers();
 		
-		if (uname==null || uname.equals("")) errorMSg+="Benutzername fehlt\n";
-		if (pw==null || pw.equals("")) errorMSg+="Passwort fehlt\n";
-		if (msg==null || msg.equals("")) errorMSg+="Nachricht fehlt\n";
+		if (uname==null || uname.equals("")) errorMSg+="Benutzername fehlt<br />";
+		if (pw==null || pw.equals("")) errorMSg+="Passwort fehlt<br />";
+		if (msg==null || msg.equals("")) errorMSg+="Nachricht fehlt<br />";
 		int okmsgcnd =0;
 		for (Iterator iterator = nums.iterator(); iterator.hasNext();) {
 			String string = (String) iterator.next();
@@ -27,14 +27,14 @@ public class FormChecker {
 				okmsgcnd++;
 			}	
 		}
-		System.out.println("found recipients "+okmsgcnd);
-		if (okmsgcnd==0) errorMSg+="Empfänger fehlt\n";
+	//	System.out.println("found recipients "+okmsgcnd);
+		if (okmsgcnd==0) errorMSg+="Empfänger fehlt<br />";
 		
 		if (!errorMSg.equals("")) {
 			throw new SMSFormDataException(errorMSg);
 			
 		}
-		System.out.println("formdata is ok...");
+	//	System.out.println("formdata is ok...");
 
 		return true;
 		

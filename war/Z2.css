@@ -19,10 +19,6 @@ background-color: #ffffff;
 
 	}
 	
-tr{
-
-	}
-	
 h1 {
   font-size: 2em;
   font-weight: bold;
@@ -44,20 +40,3 @@ h1 {
 .gwt-TextBox{
 	color: #3f8ec4;
 	}
-/** Most GWT widgets already have a style name defined */
-.gwt-DialogBox {
-  width: 400px;
-}
-
-.dialogVPanel {
-  margin: 5px;
-}
-
-.serverResponseLabelError {
-  color: red;
-}
-
-/** Set ids using widget.getElement().setId("idOfElement") */
-#closeButton {
-  margin: 15px 6px 6px;
-}
