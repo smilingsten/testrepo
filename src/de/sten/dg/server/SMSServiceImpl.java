@@ -75,7 +75,7 @@ SMSService{
 			
 			String authheader = "TAuth realm=\"https://odg.t-online.de\",tauth_token=\""
 				+ token + "\"";
-			
+		ArrayList<String> errorMessages = new ArrayList<String>();	
 		SMSSendReport report = new SMSSendReport();
 			for (int i=0; i<messages.size();i++){
 				try {
@@ -93,6 +93,7 @@ SMSService{
 					resp.setStatusmessage("IOException beim Senden an "+messages.get(i).getNumber());
 					report.addBadMsg(messages.get(i).getNumber());
 					System.out.println("IO exception beim send try/catch");
+					errorMessages.add(e.getMessage());
 
 
 					
@@ -104,9 +105,9 @@ SMSService{
 							"\n Antwort des ODG Servers war: "+e.getMessage()+
 							"\n HTTP Statuscode war: "+e.getResponseCode());
 					report.addBadMsg(messages.get(i).getNumber());
-					System.out.println("IO exception beim send try/catch");
+					System.out.println("SendSMSException beim send try/catch");
+					errorMessages.add(e.getErrorMsg());
 
-					
 
 				}
 			}
@@ -117,7 +118,12 @@ SMSService{
 				+" Empfänger versandt");
 		if (report.getBadRecipients()>0){
 			sb.append("<br /><br />Leider wurden "+report.getTotalMsgBad()+" Nachrichten an "+report.getBadRecipients()
-					+" nicht versandt");
+					+" Empfänger nicht versandt");
+			
+		}
+		
+		for (int i = 0; i < errorMessages.size(); i++) {
+			sb.append("<br /><br/>Fehlermeldung "+i+":"+errorMessages.get(i));
 			
 		}
 		SMSResponseObject smsresponse =new SMSResponseObject();

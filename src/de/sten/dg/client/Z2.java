@@ -16,6 +16,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.PasswordTextBox;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -39,6 +40,7 @@ public class Z2 implements EntryPoint {
 	HTML dialoghtml;
 	DialogBox dbox;
 	VerticalPanel dialogVPanel;
+	final Button closeButton = new Button("Schließen");
 
 	CheckBox flashcheck, sandbox;
 	HashMap<Date, Numberbox> numboxes;
@@ -75,20 +77,21 @@ public class Z2 implements EntryPoint {
 		dialoghtml = new HTML("Here is the dialog message");
 		dbox = new DialogBox();
 		dbox.setAnimationEnabled(true);
-		dbox.setTitle("My Dialog");
+		closeButton.setWidth("100%");
+		
 		dialogVPanel = new VerticalPanel();
 		dialogVPanel.addStyleName("dialogVPanel");
 		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
 		dialogVPanel.add(dialoghtml);
 		dbox.setWidget(dialogVPanel);
-		final Button closeButton = new Button("Close");
+		
 		dialogVPanel.add(closeButton);
 		closeButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				dbox.hide();
 			}
 		});
-
+		
 		dbox.hide();
 
 		// create all objects
@@ -136,6 +139,14 @@ public class Z2 implements EntryPoint {
 	private final class SendButtonHandler implements ClickHandler {
 
 		public void onClick(ClickEvent event) {
+			
+			dialoghtml
+			.setHTML("<p><b>Sending message(s)...</b></p><br /><br /> "
+					+"<p align=\"center\"><img src=\"odie.gif\" /></p>");	
+			dialoghtml.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+			closeButton.setVisible(false);
+	dbox.center();
+			
 			SMSFormObject formdata = readForm();
 			try {
 				new FormChecker().isFormDataOK(formdata);
@@ -144,6 +155,8 @@ public class Z2 implements EntryPoint {
 				dialoghtml
 						.setHTML("<p><b>Ich kann so nicht arbeiten!!!</b></p><br /> "
 								+ e.getErrorMsg() + "<br />");
+				closeButton.setVisible(true);
+
 				dbox.center();
 
 				return;
@@ -167,20 +180,27 @@ public class Z2 implements EntryPoint {
 		smsService.sendSMS(smsrobj,
 				new AsyncCallback<SMSResponseObject>() {
 					public void onFailure(Throwable caught) {
+
+						
 						System.out.println("rpc failure");
 						SMSSendException myex = (SMSSendException) caught;
 						dialoghtml
 						.setHTML("<p>"+myex.getErrorMsg()+"</p><br /> ");
+						closeButton.setVisible(true);
 				dbox.center();
 				
 				System.out.println("caught says "+myex.getErrorMsg());
 					}
 
 					public void onSuccess(SMSResponseObject result) {
+						sendButton.setEnabled(true);
+
 						System.out.println("rpc success");
 						System.out.println("answer was: "+result.getStatusmessage());
 						dialoghtml
 						.setHTML("<p>"+result.getStatusmessage()+"</p><br /> ");
+						closeButton.setVisible(true);
+
 				dbox.center();
 
 					}
@@ -290,6 +310,7 @@ public class Z2 implements EntryPoint {
 			String numberstring = x.replaceAll("([^0-9])", "");
 			if (x.contains("+"))
 				numberstring = "+" + numberstring;
+			if( (!(numberstring.equals(""))) && ( !(numberstring ==null))    )
 			numbers.add(numberstring);
 
 		}
