@@ -16,9 +16,14 @@ background-color: #ffffff;
 	padding:0;
 	margin:0 auto;
 	margin-top: 2em;
+	
 
 	}
+#me{
+	  font-size: 0.75em;
+	  font-weight: normal;
 	
+	}
 h1 {
   font-size: 2em;
   font-weight: bold;
@@ -39,4 +44,9 @@ h1 {
 	}
 .gwt-TextBox{
 	color: #3f8ec4;
+	}
+.diapnl{
+	
+	padding: 22px;
+	
 	}

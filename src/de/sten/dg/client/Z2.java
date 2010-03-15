@@ -11,6 +11,8 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -33,16 +35,17 @@ public class Z2 implements EntryPoint {
 
 	TextBox namebox, originbox;
 	Numberbox numbox;
-	Button numplusbtn, sendButton;
+	Button numplusbtn, sendButton, validateButton;
 	PasswordTextBox pwbox;
 	TextArea msgbox;
 	Label cntlbl;
-	HTML dialoghtml;
+	HTML dialoghtml, somehtml;
 	DialogBox dbox;
 	VerticalPanel dialogVPanel;
 	final Button closeButton = new Button("Schließen");
-
-	CheckBox flashcheck, sandbox;
+	
+	Timer t;
+	CheckBox flashcheck, sandbox, staylogbox;
 	HashMap<Date, Numberbox> numboxes;
 	private final SMSServiceAsync smsService = GWT
 	.create(SMSService.class);
@@ -69,11 +72,31 @@ public class Z2 implements EntryPoint {
 		RootPanel.get("flash").add(flashcheck);
 		RootPanel.get("sendb").add(sendButton);
 		RootPanel.get("sandbox").add(sandbox);
+		RootPanel.get("stayloggedin").add(somehtml);
+		RootPanel.get("stayloggedin").add(staylogbox);
+	//	RootPanel.get("validate").add(validateButton);
 
+		
+
+		
+
+	}
+	public final class TestBtnHandler implements ClickHandler{
+
+		public void onClick(ClickEvent event) {
+System.out.println("testbutton clicked");	
+	SessionManager sessionManager = new SessionManager();
+	sessionManager.setSessionCookie("Sten"	, "MyPass!_);.Word_");
+	sessionManager.deleteSessionCookie();
+	System.out.println("valid cokie exists: "+sessionManager.validCookieExists());
+		}
+		
 	}
 
 	// builds all UI elements and adds event handlers
 	private void createUIObbjects() {
+		validateButton = new Button("testbtn");
+		validateButton.addClickHandler(new TestBtnHandler());
 		dialoghtml = new HTML("Here is the dialog message");
 		dbox = new DialogBox();
 		dbox.setAnimationEnabled(true);
@@ -84,7 +107,8 @@ public class Z2 implements EntryPoint {
 		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
 		dialogVPanel.add(dialoghtml);
 		dbox.setWidget(dialogVPanel);
-		
+		dialogVPanel.addStyleName("diapnl");
+		somehtml= new HTML("<p>eingelogged bleiben<br />(nicht empfohlen)</p>"); 
 		dialogVPanel.add(closeButton);
 		closeButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -105,6 +129,7 @@ public class Z2 implements EntryPoint {
 		numplusbtn = new Button("+");
 		flashcheck = new CheckBox();
 		sandbox = new CheckBox();
+		staylogbox = new CheckBox();
 		sendButton = new Button("Send");
 
 		// add handlers to buttons and hide first remove button
@@ -139,14 +164,7 @@ public class Z2 implements EntryPoint {
 	private final class SendButtonHandler implements ClickHandler {
 
 		public void onClick(ClickEvent event) {
-			
-			dialoghtml
-			.setHTML("<p><b>Sending message(s)...</b></p><br /><br /> "
-					+"<p align=\"center\"><img src=\"odie.gif\" /></p>");	
-			dialoghtml.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
-			closeButton.setVisible(false);
-	dbox.center();
-			
+		
 			SMSFormObject formdata = readForm();
 			try {
 				new FormChecker().isFormDataOK(formdata);
@@ -161,8 +179,32 @@ public class Z2 implements EntryPoint {
 
 				return;
 			}
+			
+			dialoghtml
+			.setHTML("<p><b>Sending message(s)...</b></p><br /><br /> "
+					+"<p align=\"center\"><img src=\"odie.gif\" /></p>");	
+			dialoghtml.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+			closeButton.setVisible(false);
+	dbox.center();
+
+
+	
 			ArrayList<SMSMessageObject> smsmo =  getMessages2send(formdata);
 			SMSRequestObject smsro = new SMSRequestObject();
+			
+			 t = new Timer() {
+			      public void run() {
+			    	  dialoghtml
+						.setHTML("<p><b>Zeitüberschreitung beim Senden</b></p><br /> "
+								+"<p>Ich kann nicht sagen, ob die Nachricht gesendet wurde :-(<br /><br /></p>");
+				closeButton.setVisible(true);
+
+				dbox.center();
+			      }
+			    };
+			    int xy = smsmo.size()*500;
+			    t.schedule(16666+xy);
+			
 			smsro.setUsername(formdata.getUsername());
 			smsro.setPassword(formdata.getPassword());
 			smsro.setOrginator(formdata.getOrginator());
@@ -181,7 +223,7 @@ public class Z2 implements EntryPoint {
 				new AsyncCallback<SMSResponseObject>() {
 					public void onFailure(Throwable caught) {
 
-						
+						t.cancel();
 						System.out.println("rpc failure");
 						SMSSendException myex = (SMSSendException) caught;
 						dialoghtml
@@ -193,8 +235,8 @@ public class Z2 implements EntryPoint {
 					}
 
 					public void onSuccess(SMSResponseObject result) {
-						sendButton.setEnabled(true);
-
+						
+						t.cancel();
 						System.out.println("rpc success");
 						System.out.println("answer was: "+result.getStatusmessage());
 						dialoghtml
@@ -320,7 +362,7 @@ public class Z2 implements EntryPoint {
 		if (!(sandbox.getValue())) environment = "production";
 		SMSFormObject formdata = new SMSFormObject(namebox.getText().trim()
 				.replaceAll(" ", ""), pwbox.getText(),
-				originbox.getText().trim(), msgbox.getText(), numbers,
+				originbox.getText().trim().replace(" ", "").replaceAll("[-/()]", ""), msgbox.getText(), numbers,
 				flashcheck.getValue(),environment);
 		return formdata;
 	}

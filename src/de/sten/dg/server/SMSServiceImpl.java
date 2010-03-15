@@ -29,6 +29,7 @@ public class SMSServiceImpl extends RemoteServiceServlet implements
 SMSService{
 	URLFetchService urlFetchService = URLFetchServiceFactory
 	.getURLFetchService();
+	
 
 	public SMSResponseObject sendSMS(SMSRequestObject smsro)
 			throws SMSSendException {
